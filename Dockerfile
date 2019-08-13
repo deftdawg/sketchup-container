@@ -18,7 +18,7 @@ ENV WINEARCH=win64
 RUN xvfb-run winetricks -q vcrun2017
 RUN winetricks -q win7
 WORKDIR /home/user
-COPY sketchupmake-2017-2-2555-90782-en-x64.exe /home/user/
+ADD --chown=user:user https://www.sketchup.com/sketchup/2017/en/sketchupmake-2017-2-2555-90782-en-x64-exe sketchupmake-2017-2-2555-90782-en-x64.exe
 RUN echo '9841792f170d803ae95a2741c44cce38e618660f98a1a3816335e9bf1b45a337  sketchupmake-2017-2-2555-90782-en-x64.exe' | sha256sum -c
 RUN 7za x sketchupmake-2017-2-2555-90782-en-x64.exe SketchUp2017-x64.msi && wine64 msiexec /i SketchUp2017-x64.msi /quiet && rm -f SketchUp2017-x64.msi
 RUN ls -la ".wine/drive_c/Program Files/SketchUp/SketchUp 2017/SketchUp.exe"
