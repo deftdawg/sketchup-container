@@ -1,4 +1,93 @@
 
+# DeftDawg's Containerized SketchUp Make 2017
+
+Based on sketchup-container projects by @adelton (Jan Pazdziora) - Fedora/Docker and @tbultel (Thierry Bultel) - Ubuntu/Docker
+
+This solution uses rootless Podman to install SketchUp Make 2017 into a container and then run it, allowing this old windows software to run on Linux (and possibly MacOS).  The Dockerfile has essentially been completely rewritten.
+
+Before working on this solution, I attempted to get SketchUp Make 2017 running via Proton and 
+while it does install & run at low resolution under SteamOS mode (inside pressure vessel), 
+it tries to open at native resolution, fails to render the OpenGL part of the main window & crashes when launched from Steam Linux on 
+Desktop, the same failure occurs on Codeweaver's CrossOver for Linux.
+
+## Screenshot - Running on Rootless Podman on NixOS Linux
+
+![](containerized-sketchup-screenshot.png) 
+
+## Building
+
+```sh
+podman build --ulimit nofile=32767 --net=host --ipc=host --pid=host -t sketchup .
+```
+
+## Running
+
+### Normal
+```sh
+podman run --network=host --ipc=host --pid=host --tmpfs /tmp -v /tmp/.wine-$(id -u) -e DISPLAY=$DISPLAY --security-opt=label:type:spc_t --user=$(id -u):$(id -g) -v /tmp/.X11-unix/X0:/tmp/.X11-unix/X0 -v ${PWD}/data:/data:Z --rm localhost/sketchup
+```
+
+### Debug w/ a terminal
+```sh
+podman run --entrypoint run-xterm --network=host --ipc=host --pid=host --tmpfs /tmp -v /tmp/.wine-$(id -u) -e DISPLAY=$DISPLAY --security-opt=label:type:spc_t --user=$(id -u):$(id -g) -v /tmp/.X11-unix/X0:/tmp/.X11-unix/X0 -v ${PWD}/data:/data:Z --rm localhost/sketchup
+```
+
+## Podman Building Challenges
+### Low open file ulimit
+99% of install runs under podman will fail when ulimit -n is `1024` at the .NET install step with:
+```
+0600:err:winediag:NtCreateFile Too many open files, ulimit -n probably needs to be increased
+```
+
+To overcome this we make sure the podman host has/allows a higher ulimit and provide `--ulimit` to podman's `build` command with a higher ulimit value
+```sh
+podman build --ulimit nofile=32767 ...
+```
+
+### Podman's consumption of disk space
+
+This container which is approximately 8GB as an exported tarball, when it builds cleanly requires approximately 106GB of disk space to create.
+
+Podman uses a ridiculous amount of disk space creating layers, failed builds leave behind garbage and interrupted builds leave behind hard to clean containers (https://github.com/containers/podman/issues/14523), hopefully these are areas podman can improve upon.
+
+In the meantime, I've taken the following steps to wipe out all podman containers on my system when disk gets low or I finally have a working container build (I'll wipe and rebuild):
+
+```sh
+## These are commented out, run these only if you're sure you want to nuke *everything* podman
+## Need to use builah to delete external containers... per podman #14523
+nix-shell -p buildah # Install buildah on nixos temporarily
+# podman system reset -f
+# buildah containers --quiet | xargs -r buildah rm; buildah images --quiet | xargs -r buildah rmi -f
+```
+
+## Wine FIXME/TODO
+- [ ] Map $HOME into container somehow
+	- [ ] Map Documents to host:Documents
+	- [ ] Is it possible to do this with `podman unshare` / namespaces changes?
+- [ ] Fix file paths that sketchup says are invalid at startup; 
+	  see Window -> Preferences -> Application Paths -> Components / also `user.reg`:
+```
++[Software\\SketchUp\\SketchUp 2017\\File Locations] 1700000177
++"Classifications"="C:\\users\\user\\AppData\\Roaming\\SketchUp\\SketchUp 2017\\SketchUp\\"
++"ComponentBrowser"="C:\\ProgramData\\SketchUp\\SketchUp 2017\\SketchUp\\Components\\"
++"ComponentBrowser1"="C:\\ProgramData\\SketchUp\\SketchUp 2017\\SketchUp\\Components\\"
++"ComponentBrowser2"="C:\\ProgramData\\SketchUp\\SketchUp 2017\\SketchUp\\Components\\"
++"Components"="C:\\users\\user\\AppData\\Roaming\\SketchUp\\SketchUp 2017\\SketchUp\\"
++"Images"="C:\\users\\user\\Documents\\"
++"ImportExport"="C:\\users\\user\\Documents\\"
++"Materials"="C:\\users\\user\\AppData\\Roaming\\SketchUp\\SketchUp 2017\\SketchUp\\"
++"MaterialsBrowser"="C:\\ProgramData\\SketchUp\\SketchUp 2017\\SketchUp\\Materials\\"
++"MaterialsBrowser2"="C:\\ProgramData\\SketchUp\\SketchUp 2017\\SketchUp\\Materials\\"
++"Models"="C:\\users\\user\\Documents\\"
++"Styles"="C:\\users\\user\\AppData\\Roaming\\SketchUp\\SketchUp 2017\\SketchUp\\"
++"StylesBrowser"="C:\\ProgramData\\SketchUp\\SketchUp 2017\\SketchUp\\Styles\\"
++"StylesBrowser2"="C:\\ProgramData\\SketchUp\\SketchUp 2017\\SketchUp\\Styles\\"
++"Templates"="C:\\users\\user\\AppData\\Roaming\\SketchUp\\SketchUp 2017\\SketchUp\\"
++"Textures"="C:\\users\\user\\Documents\\"
+```
+
+# Original README by @adelton (Jan Pazdziora) and @tbultel (Thierry Bultel) 
+```
 Run SketchUp Make in container
 ==============================
 
@@ -49,3 +138,4 @@ Namely the STL export does not work with wine, and I had to cheat a little bit.
 It is not installed automagically, but the extension package *sketchup-stl.rbz*
 is present on the Desktop directory of the wine user, making it straightforward
 to install in Sketchup through the Extension Manager
+```
