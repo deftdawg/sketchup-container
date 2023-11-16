@@ -109,4 +109,5 @@ RUN mkdir /data/SketchUp\ Plugins && \
 
 ENTRYPOINT [ "/usr/local/bin/run-sketchup" ]
 
-LABEL RUN 'podman run --network=host --ipc=host --pid=host --tmpfs /tmp -v /tmp/.wine-$(id -u) -e DISPLAY=$DISPLAY --security-opt=label:type:spc_t --user=$(id -u):$(id -g) -v /tmp/.X11-unix/X0:/tmp/.X11-unix/X0 -v ${PWD}/data:/data:Z --rm localhost/sketchup'
+LABEL RUN 'podman run --userns=keep-id --network=host --ipc=host --pid=host --tmpfs /tmp -v /tmp/.wine-$(id -u) -e DISPLAY=$DISPLAY --security-opt=label:type:spc_t --user=$(id -u):$(id -g) -v /tmp/.X11-unix/X0:/tmp/.X11-unix/X0 -v ${HOME}:/data:Z --rm localhost/sketchup'
+

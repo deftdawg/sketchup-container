@@ -11,6 +11,9 @@ fi
 mkdir -p /tmp/wine
 ( cd /home/user/.tmp-template && cp -rp . /tmp/wine )
 
+# Create SketchUp Plugins directory in the host's home directory, if not already existing
+! [ -d /data/SketchUp\ Plugins ] && mkdir /data/SketchUp\ Plugins
+
 export HOME=/data/.sketchup-run
 cd /data
 

@@ -24,12 +24,12 @@ podman build --ulimit nofile=32767 --net=host --ipc=host --pid=host -t sketchup 
 
 ### Normal
 ```sh
-podman run --network=host --ipc=host --pid=host --tmpfs /tmp -v /tmp/.wine-$(id -u) -e DISPLAY=$DISPLAY --security-opt=label:type:spc_t --user=$(id -u):$(id -g) -v /tmp/.X11-unix/X0:/tmp/.X11-unix/X0 -v ${PWD}/data:/data:Z --rm localhost/sketchup
+podman run --userns=keep-id --network=host --ipc=host --pid=host --tmpfs /tmp -v /tmp/.wine-$(id -u) -e DISPLAY=$DISPLAY --security-opt=label:type:spc_t --user=$(id -u):$(id -g) -v /tmp/.X11-unix/X0:/tmp/.X11-unix/X0 -v ${HOME}:/data:Z --rm localhost/sketchup
 ```
 
 ### Debug w/ a terminal
 ```sh
-podman run --entrypoint run-xterm --network=host --ipc=host --pid=host --tmpfs /tmp -v /tmp/.wine-$(id -u) -e DISPLAY=$DISPLAY --security-opt=label:type:spc_t --user=$(id -u):$(id -g) -v /tmp/.X11-unix/X0:/tmp/.X11-unix/X0 -v ${PWD}/data:/data:Z --rm localhost/sketchup
+podman run --entrypoint run-xterm --userns=keep-id --network=host --ipc=host --pid=host --tmpfs /tmp -v /tmp/.wine-$(id -u) -e DISPLAY=$DISPLAY --security-opt=label:type:spc_t --user=$(id -u):$(id -g) -v /tmp/.X11-unix/X0:/tmp/.X11-unix/X0 -v ${HOME}:/data:Z --rm localhost/sketchup
 ```
 
 ## Podman Building Challenges
@@ -60,31 +60,9 @@ nix-shell -p buildah # Install buildah on nixos temporarily
 # buildah containers --quiet | xargs -r buildah rm; buildah images --quiet | xargs -r buildah rmi -f
 ```
 
-## Wine FIXME/TODO
-- [ ] Map $HOME into container somehow
-	- [ ] Map Documents to host:Documents
-	- [ ] Is it possible to do this with `podman unshare` / namespaces changes?
-- [ ] Fix file paths that sketchup says are invalid at startup; 
-	  see Window -> Preferences -> Application Paths -> Components / also `user.reg`:
-```
-+[Software\\SketchUp\\SketchUp 2017\\File Locations] 1700000177
-+"Classifications"="C:\\users\\user\\AppData\\Roaming\\SketchUp\\SketchUp 2017\\SketchUp\\"
-+"ComponentBrowser"="C:\\ProgramData\\SketchUp\\SketchUp 2017\\SketchUp\\Components\\"
-+"ComponentBrowser1"="C:\\ProgramData\\SketchUp\\SketchUp 2017\\SketchUp\\Components\\"
-+"ComponentBrowser2"="C:\\ProgramData\\SketchUp\\SketchUp 2017\\SketchUp\\Components\\"
-+"Components"="C:\\users\\user\\AppData\\Roaming\\SketchUp\\SketchUp 2017\\SketchUp\\"
-+"Images"="C:\\users\\user\\Documents\\"
-+"ImportExport"="C:\\users\\user\\Documents\\"
-+"Materials"="C:\\users\\user\\AppData\\Roaming\\SketchUp\\SketchUp 2017\\SketchUp\\"
-+"MaterialsBrowser"="C:\\ProgramData\\SketchUp\\SketchUp 2017\\SketchUp\\Materials\\"
-+"MaterialsBrowser2"="C:\\ProgramData\\SketchUp\\SketchUp 2017\\SketchUp\\Materials\\"
-+"Models"="C:\\users\\user\\Documents\\"
-+"Styles"="C:\\users\\user\\AppData\\Roaming\\SketchUp\\SketchUp 2017\\SketchUp\\"
-+"StylesBrowser"="C:\\ProgramData\\SketchUp\\SketchUp 2017\\SketchUp\\Styles\\"
-+"StylesBrowser2"="C:\\ProgramData\\SketchUp\\SketchUp 2017\\SketchUp\\Styles\\"
-+"Templates"="C:\\users\\user\\AppData\\Roaming\\SketchUp\\SketchUp 2017\\SketchUp\\"
-+"Textures"="C:\\users\\user\\Documents\\"
-```
+## Containerized SketchUp TODO
+- [ ] Add documentation on using SketchUp Plugins (place them in `${HOME}/SketchUp\ Plugins`)
+- [ ] Add [3Dconnexion SpaceMouse for Wine/Linux](https://github.com/DD1984/SpaceMouse_Fusion360_Wine) using [spacenavd](https://github.com/FreeSpacenav/spacenavd)
 
 # Original README by @adelton (Jan Pazdziora) and @tbultel (Thierry Bultel) 
 ```
