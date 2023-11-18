@@ -24,12 +24,20 @@ podman build --ulimit nofile=32767 --net=host --ipc=host --pid=host -t sketchup 
 
 ### Normal
 ```sh
-podman run --userns=keep-id --network=host --ipc=host --pid=host --tmpfs /tmp -v /tmp/.wine-$(id -u) -e DISPLAY=$DISPLAY --security-opt=label:type:spc_t --user=$(id -u):$(id -g) -v /tmp/.X11-unix/X0:/tmp/.X11-unix/X0 -v ${HOME}:/data:Z --rm localhost/sketchup
+
+# FIXME make this only apply -v ${DEVICE}:${DEVICE} if spacemouse found
+DEVICE=/dev/input/$(grep "3Dconnexion" -A10 /proc/bus/input/devices | grep Handlers | grep -oE "event[^ ]*" | head -1)
+
+podman run -v ${DEVICE}:${DEVICE} --userns=keep-id --network=host --ipc=host --pid=host --tmpfs /tmp -v /tmp/.wine-$(id -u) -e DISPLAY=$DISPLAY --security-opt=label:type:spc_t --user=$(id -u):$(id -g) -v /tmp/.X11-unix/X0:/tmp/.X11-unix/X0 -v ${HOME}:/data:Z --rm localhost/sketchup
 ```
 
 ### Debug w/ a terminal
 ```sh
-podman run --entrypoint run-xterm --userns=keep-id --network=host --ipc=host --pid=host --tmpfs /tmp -v /tmp/.wine-$(id -u) -e DISPLAY=$DISPLAY --security-opt=label:type:spc_t --user=$(id -u):$(id -g) -v /tmp/.X11-unix/X0:/tmp/.X11-unix/X0 -v ${HOME}:/data:Z --rm localhost/sketchup
+
+# FIXME make this only apply -v ${DEVICE}:${DEVICE} if spacemouse found
+DEVICE=/dev/input/$(grep "3Dconnexion" -A10 /proc/bus/input/devices | grep Handlers | grep -oE "event[^ ]*" | head -1)
+
+podman run --entrypoint run-xterm -v ${DEVICE}:${DEVICE} --userns=keep-id --network=host --ipc=host --pid=host --tmpfs /tmp -v /tmp/.wine-$(id -u) -e DISPLAY=$DISPLAY --security-opt=label:type:spc_t --user=$(id -u):$(id -g) -v /tmp/.X11-unix/X0:/tmp/.X11-unix/X0 -v ${HOME}:/data:Z --rm localhost/sketchup
 ```
 
 ## Podman Building Challenges

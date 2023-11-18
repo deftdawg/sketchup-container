@@ -3,6 +3,9 @@
 set -e
 set -x
 
+# Make space mouse device available to everyone
+chmod 0777 /dev/input/event*
+
 # Favour terminals that can be resized over xterm
 export XTERM=$(type -p konsole gnome-terminal xterm | head -1 | cut -d' ' -f1) 
 exec $XTERM -e bash

@@ -17,5 +17,10 @@ mkdir -p /tmp/wine
 export HOME=/data/.sketchup-run
 cd /data
 
+# Make space mouse device available to everyone
+chmod 0777 /dev/input/event*
+
+# FIXME start spacenavd
+
 exec wine64 $WINEPREFIX/"drive_c/Program Files/SketchUp/SketchUp 2017/SketchUp.exe" "$@"
 

@@ -7,7 +7,9 @@ ARG sketchup_exe_url=https://web.archive.org/web/20220217222923/https://download
 RUN apt update
 RUN apt install -y software-properties-common wget file p7zip \ 
                    libuid-wrapper winbind zip winetricks xvfb \
-                   xterm konsole zenity nano less bat && \
+                   xterm konsole zenity nano less bat \
+                   usbutils sudo \
+                   git-lfs build-essential pkg-config libx11-dev qtbase5-dev && \
     echo y | winetricks --self-update
 
 RUN dpkg --add-architecture i386 && \
@@ -23,7 +25,8 @@ ARG uid=1000
 RUN groupadd -g $gid user && \
     useradd -u $uid -g user user && \
     mkdir /data && chown user /data && \
-    mkdir -p /home/user && chown -R user:user /home/user
+    mkdir -p /home/user && chown -R user:user /home/user && \
+    echo 'user ALL=(ALL:ALL) NOPASSWD:ALL' > /etc/sudoers.d/user-nopasswd
 
 USER user
 
@@ -106,6 +109,26 @@ RUN cd /home/$(whoami)/.wine/drive_c/users/$(whoami)/Favorites && \
 # Install SketchUp Plugins in the host's home directory
 RUN mkdir /data/SketchUp\ Plugins && \
     ln -s /data/SketchUp\ Plugins /home/$(whoami)/.wine/drive_c/users/$(whoami)/AppData/Roaming/SketchUp
+
+### SpaceMouse related
+RUN git clone https://github.com/FreeSpacenav/libspnav.git && \ 
+    cd libspnav/ && \
+    ./configure --prefix=/usr && \
+    sudo make install && \
+    sh -c "for example in examples/*; do cd \${example} && sudo make && cd -; done"    
+
+RUN git clone https://github.com/FreeSpacenav/spacenavd.git && \ 
+    cd spacenavd/ && \
+    ./configure && \
+    sudo make install
+
+RUN git clone https://github.com/FreeSpacenav/spnavcfg && \ 
+    cd spnavcfg/ && \
+    ./configure && \
+    make
+
+RUN git clone https://github.com/DD1984/SpaceMouse_Fusion360_Wine && \
+    cp SpaceMouse_Fusion360_Wine/win_dll_test/* ~/.wine/drive_c/users/user/Desktop/
 
 ENTRYPOINT [ "/usr/local/bin/run-sketchup" ]
 
