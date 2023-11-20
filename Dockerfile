@@ -17,7 +17,7 @@ RUN dpkg --add-architecture i386 && \
     apt-key add winehq.key && \
     apt-add-repository "deb https://dl.winehq.org/wine-builds/ubuntu/ ${VERSION_CODENAME} main" && \
     apt update && \
-    apt install -y --install-recommends winehq-staging
+    apt install -y --install-recommends winehq-devel
 
 # Create "user" account
 ARG gid=1000
