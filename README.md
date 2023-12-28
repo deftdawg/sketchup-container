@@ -28,7 +28,7 @@ podman build --ulimit nofile=32767 --net=host --ipc=host --pid=host -t sketchup 
 
 # FIXME make this only apply -v ${DEVICE}:${DEVICE} if spacemouse found
 DEVICE=/dev/input/$(grep "3Dconnexion" -A10 /proc/bus/input/devices | grep Handlers | grep -oE "event[^ ]*" | head -1)
-
+sudo chown $USER $DEVICE
 xhost +
 podman run -v ${DEVICE}:${DEVICE} --userns=keep-id --network=host --ipc=host --pid=host --tmpfs /tmp -v /tmp/.wine-$(id -u) -e DISPLAY=$DISPLAY --security-opt=label:type:spc_t --user=$(id -u):$(id -g) -v /tmp/.X11-unix/X0:/tmp/.X11-unix/X0 -v ${HOME}:/data:Z --rm localhost/sketchup
 ```
@@ -38,7 +38,7 @@ podman run -v ${DEVICE}:${DEVICE} --userns=keep-id --network=host --ipc=host --p
 
 # FIXME make this only apply -v ${DEVICE}:${DEVICE} if spacemouse found
 DEVICE=/dev/input/$(grep "3Dconnexion" -A10 /proc/bus/input/devices | grep Handlers | grep -oE "event[^ ]*" | head -1)
-
+sudo chown $USER $DEVICE
 xhost +
 podman run --entrypoint run-xterm -v ${DEVICE}:${DEVICE} --userns=keep-id --network=host --ipc=host --pid=host --tmpfs /tmp -v /tmp/.wine-$(id -u) -e DISPLAY=$DISPLAY --security-opt=label:type:spc_t --user=$(id -u):$(id -g) -v /tmp/.X11-unix/X0:/tmp/.X11-unix/X0 -v ${HOME}:/data:Z --rm localhost/sketchup
 ```
